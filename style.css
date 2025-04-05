@@ -137,16 +137,16 @@ h1 {
     font-weight: bold;
 }
 
-/* 小贴士卡片美化 */
-.note.tips-note {
-    background: linear-gradient(135deg, #fff0f8, #ffeef4);
-    border-left: 8px solid #ffb6c1;
-    padding-left: 40px;
-    background-image: url('https://cdn-icons-png.flaticon.com/512/3916/3916856.png');
-    background-repeat: no-repeat;
-    background-position: 10px 12px;
-    background-size: 24px 24px;
-}
+/*!* 小贴士卡片美化 *!*/
+/*.note.tips-note {*/
+/*    background: linear-gradient(135deg, #fff0f8, #ffeef4);*/
+/*    border-left: 8px solid #ffb6c1;*/
+/*    padding-left: 40px;*/
+/*    background-image: url('https://cdn-icons-png.flaticon.com/512/3916/3916856.png');*/
+/*    background-repeat: no-repeat;*/
+/*    background-position: 10px 12px;*/
+/*    background-size: 24px 24px;*/
+/*}*/
 
 /* 响应式 */
 @media screen and (max-width: 768px) {
