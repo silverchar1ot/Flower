@@ -443,27 +443,45 @@
     const searchBtn = document.getElementById('search-btn');
     const notes = document.querySelectorAll('.note');
 
-    // 新增 DOM 元素
+    let matches = [];
+    let currentIndex = 0;
+
+    // 显示当前匹配状态
     const resultDisplay = document.createElement('div');
     resultDisplay.id = 'search-results';
     resultDisplay.style.textAlign = 'center';
     resultDisplay.style.marginTop = '10px';
     resultDisplay.style.color = '#d63384';
-    let nextBtn = document.createElement('button');
-    nextBtn.textContent = '下一个匹配';
-    nextBtn.style.marginLeft = '10px';
-    nextBtn.style.backgroundColor = '#ff69b4';
-    nextBtn.style.color = 'white';
-    nextBtn.style.border = 'none';
-    nextBtn.style.padding = '6px 10px';
-    nextBtn.style.borderRadius = '6px';
-    nextBtn.style.cursor = 'pointer';
-    nextBtn.style.display = 'none';
-    resultDisplay.appendChild(nextBtn);
     document.querySelector('.search-bar').appendChild(resultDisplay);
 
-    let matches = [];
-    let currentIndex = 0;
+    // 浮动按钮容器
+    const floatingContainer = document.createElement('div');
+    floatingContainer.style.position = 'fixed';
+    floatingContainer.style.bottom = '30px';
+    floatingContainer.style.right = '30px';
+    floatingContainer.style.display = 'flex';
+    floatingContainer.style.gap = '10px';
+    floatingContainer.style.zIndex = '999';
+
+    const prevBtn = document.createElement('button');
+    const nextBtn = document.createElement('button');
+
+    [prevBtn, nextBtn].forEach(btn => {
+        btn.style.backgroundColor = '#ff69b4';
+        btn.style.color = 'white';
+        btn.style.border = 'none';
+        btn.style.padding = '10px 14px';
+        btn.style.borderRadius = '10px';
+        btn.style.cursor = 'pointer';
+        btn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
+        btn.style.display = 'none';
+    });
+
+    prevBtn.textContent = '上一个';
+    nextBtn.textContent = '下一个';
+    floatingContainer.appendChild(prevBtn);
+    floatingContainer.appendChild(nextBtn);
+    document.body.appendChild(floatingContainer);
 
     function clearHighlights() {
         document.querySelectorAll('mark').forEach(m => {
@@ -475,9 +493,11 @@
         currentIndex = 0;
     }
 
-    function doSearch(value) {
+    function highlightMatches(value) {
         const v = value.trim().toLowerCase();
         clearHighlights();
+        resultDisplay.textContent = '';
+        [prevBtn, nextBtn].forEach(btn => btn.style.display = 'none');
 
         if (!v) {
             notes.forEach(note => {
@@ -486,16 +506,14 @@
                 more.forEach(m => m.style.display = 'none');
                 note.querySelectorAll('.toggle-btn').forEach(btn => btn.textContent = '展开更多');
             });
-            resultDisplay.textContent = '';
-            nextBtn.style.display = 'none';
             return;
         }
 
-        let matchIndex = 0;
         notes.forEach(note => {
             const text = note.textContent.toLowerCase();
             if (text.includes(v)) {
                 note.style.display = 'block';
+
                 const moreContent = note.querySelectorAll('.more-content');
                 moreContent.forEach(m => m.style.display = 'block');
                 const btn = note.querySelector('.toggle-btn');
@@ -515,7 +533,6 @@
                         parent.insertBefore(mark, after);
                         parent.insertBefore(before, mark);
                         matches.push(mark);
-                        matchIndex++;
                     }
                 }
             } else {
@@ -524,26 +541,28 @@
         });
 
         if (matches.length > 0) {
-            currentIndex = 0;
-            scrollToMatch(currentIndex);
-            updateResultDisplay();
-            nextBtn.style.display = matches.length > 1 ? 'inline-block' : 'none';
+            resultDisplay.textContent = `共 ${matches.length} 个匹配项`;
+            [prevBtn, nextBtn].forEach(btn => {
+                if (matches.length > 1) btn.style.display = 'inline-block';
+            });
         } else {
             resultDisplay.textContent = '未找到相关内容';
-            nextBtn.style.display = 'none';
         }
     }
 
     function scrollToMatch(index) {
         if (matches[index]) {
             matches[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
-            updateResultDisplay();
+            resultDisplay.textContent = `第 ${index + 1} / ${matches.length} 个匹配项`;
         }
     }
 
-    function updateResultDisplay() {
-        resultDisplay.firstChild.textContent = `${matches.length > 0 ? (currentIndex + 1) : 0} / ${matches.length}`;
-    }
+    prevBtn.addEventListener('click', () => {
+        if (matches.length > 0) {
+            currentIndex = (currentIndex - 1 + matches.length) % matches.length;
+            scrollToMatch(currentIndex);
+        }
+    });
 
     nextBtn.addEventListener('click', () => {
         if (matches.length > 0) {
@@ -552,15 +571,29 @@
         }
     });
 
+    // 输入仅用于高亮，不跳转
     searchInput.addEventListener('input', function () {
-        doSearch(this.value);
+        highlightMatches(this.value);
     });
 
-    searchBtn.addEventListener('click', function () {
-        doSearch(searchInput.value);
+    // 点击搜索后滚动跳转到第一个匹配项
+    function executeSearchJump() {
+        if (matches.length > 0) {
+            currentIndex = 0;
+            scrollToMatch(currentIndex);
+        }
+    }
+
+    searchBtn.addEventListener('click', executeSearchJump);
+
+    // 支持回车键触发搜索
+    searchInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            executeSearchJump();
+        }
     });
 
-    // 展开/收起逻辑
+    // 展开/收起按钮绑定
     document.querySelectorAll('.toggle-btn').forEach(btn => {
         btn.addEventListener('click', function () {
             const more = this.parentElement.querySelectorAll('.more-content');
@@ -572,6 +605,7 @@
         });
     });
 </script>
+
 
 </body>
 </html>
